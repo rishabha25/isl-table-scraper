@@ -195,8 +195,13 @@ table = soup.find_all('table')[0]
 teams_list = []
 for row  in table.find('tbody').find_all('tr'):
     print('\n')
-    print(row.find('span', {'class' : 'hide-mobile'}).get_text())
-    teams_list.append(row.find('span', {'class' : 'hide-mobile'}).get_text())
+    
+    #Full Name
+    #print(row.find('span', {'class' : 'hide-mobile'}).get_text())
+    
+    #Abbr
+    print(row.find('abbr').get_text())
+    teams_list.append(row.find('abbr').get_text())
 
 
 
@@ -224,3 +229,7 @@ isl_table.rename(columns={'P':'Pts'}, inplace=True)
 # %%
 
 print_isl_table(isl_table)
+
+# %%
+
+# %%
