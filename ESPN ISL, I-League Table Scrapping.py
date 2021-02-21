@@ -17,38 +17,7 @@ isl_url = 'http://www.espn.in/football/table/_/league/ind.1'
 
 # In[5]:
 
-
 ileague_url = 'http://www.espn.in/soccer/table/_/league/ind.2'
-
-
-# In[97]:
-
-
-# r = requests.get(ileague_url)
-# soup = BeautifulSoup(r.text, 'lxml')
-
-# table = soup.find('table')
-
-
-# In[15]:
-
-
-# for line in table.findAll('tr'):
-#     for l in line.findAll('td'):
-#         if l.find('sup'):
-#             l.find('sup').extract()
-#         print l.getText(),'|',
-#     print
-
-
-# In[127]:
-
-
-# for x in table.find_all('th'):
-#     print x.get_text()
-
-
-# In[6]:
 
 
 # %%
@@ -101,34 +70,12 @@ def parse_html_table(table):
         
         return df
 
-# In[8]:
-
-
-club_map_isl = {'BFC': '[](/Bengaluru)', 'NEU':'[](/NorthEast-United)', 'GOA':'[](/Goa)', 
-            'MUM':'[](/Mumbai-City)', 'JAM':'[](/Jamshedpur)', 'ATK':'[](/ATK)', 'KER':'[](/Kerala-Blasters)',
-           'CHE':'[](/Chennaiyin)', 'PUNE':'[](/Pune-City)', 'DEL':'[](/Delhi-Dynamos)'}
-
-
-# In[9]:
-
-
-club_map_ileague = {'CHE':'[](/Chennai-City)',
-'QEB': '[](/East-Bengal)',
-'MOH': '[](/Mohun-Bagan)',
-'GOK': '[](/Gokulam)',
-'NER': '[](/NEROCA)',
-'MIN': '[](/Minerva-Punjab)',
-'RKFC': '[](/Real-Kashmir)',
-'CHU': '[](/Churchill-Brothers)',
-'SHL': '[](/Shillong-Lajong)',
-'IAR': '[](/Indian-Arrows)',
-'AIZ': '[](/Aizawl)'}
 
 
 # In[13]:
 
 
-def print_isl_table(new_table):
+def print_mkdwn_table(new_table):
     # new_table= make_table(isl_url)
     for p in range(0,len(new_table.columns)):
         if(p!= len(new_table.columns) - 1):
@@ -151,85 +98,41 @@ def print_isl_table(new_table):
     #     print
 
 
-# In[11]:
-
-
-def print_ileague_table():
-    new_table= make_table(ileague_url)
-    for p in range(0,len(new_table.columns)):
-        if(p!= len(new_table.columns) - 1):
-            print (new_table.columns[p], '|',)
-        else:
-            print (new_table.columns[p])
-
-    print (':------|:-------:|:-----:|:----:|:-----:|:-----:|:------:|')
-
-    for r in range(0, len(new_table)):
-        for c in range(0, len(new_table.columns)):
-            if(c!= len(new_table.columns) - 1):
-                # if(c == 0):
-                #     print club_map_ileague[new_table.iloc[r,c]] + new_table.iloc[r,c], '|',
-                # else:
-                #     print new_table.iloc[r,c], '|',
-                print (new_table.iloc[r,c], '|',)
-            else:
-                print (new_table.iloc[r,c])
-    #     print
-
-
-# %% 
-
-r = requests.get(isl_url)
-
 # %%
 
-soup = BeautifulSoup(r.text, 'lxml')
+def get_mkdwn_table(table_url):
+    r = requests.get(table_url)
+    soup = BeautifulSoup(r.text, 'lxml')
 
-# %%
+    #Get first table, it is a list of team names
+    table = soup.find_all('table')[0]
 
-table = soup.find_all('table')[0]
+    #Store team names in list
+    teams_list = []
+    for row  in table.find('tbody').find_all('tr'):
+        # print('\n')
+        #Full Name
+        #print(row.find('span', {'class' : 'hide-mobile'}).get_text())
+        
+        #Abbr
+        # print(row.find('abbr').get_text())
+        teams_list.append(row.find('abbr').get_text())
 
+    #table2 contains the win-loss-draw points data
+    table2 = soup.find_all('table')[1]
+    points_table = parse_html_table(table2)
 
-#%%
+    #Add columns and reshape points table
+    points_table['Team'] = teams_list
+    points_table['W-D-L'] = points_table['W'] +'-'+ points_table['D'] + '-'+ points_table['L']
+    points_table = points_table[['Team', 'GP', 'W-D-L', 'GD', 'P']]
+    points_table.rename(columns={'P':'Pts'}, inplace=True)
 
-teams_list = []
-for row  in table.find('tbody').find_all('tr'):
-    print('\n')
-    
-    #Full Name
-    #print(row.find('span', {'class' : 'hide-mobile'}).get_text())
-    
-    #Abbr
-    print(row.find('abbr').get_text())
-    teams_list.append(row.find('abbr').get_text())
+    #Print final table in markdown format
+    print_mkdwn_table(points_table)
 
 
 
 # %%
-
-
-table2 = soup.find_all('table')[1]
-
-# %%
-
-isl_table = parse_html_table(table2)
-
-# %%
-isl_table['Team'] = teams_list
-
-# %%
-isl_table['W-D-L'] = isl_table['W'].astype(str) +'-'+ isl_table['D'] + '-'+ isl_table['L']
-
-# %%
-isl_table = isl_table[['Team', 'GP', 'W-D-L', 'GD', 'P']]
-
-# %%
-isl_table.rename(columns={'P':'Pts'}, inplace=True)
-
-# %%
-
-print_isl_table(isl_table)
-
-# %%
-
+get_mkdwn_table('http://www.espn.in/football/table/_/league/ind.1')
 # %%
